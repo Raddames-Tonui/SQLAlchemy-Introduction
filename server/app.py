@@ -33,20 +33,68 @@ def hello_world():
 def user(username):
     return f"Hello {username}"
 
-# Sample student list
-students = ["John", "Raddames", "June", "Andrew", "Brian"]
+# # Sample student list
+# students = ["John", "Raddames", "June", "Andrew", "Brian"]
+# @app.route('/students/<int:id>', methods=['GET']) # /students/<int:id> used to pass dynamic numbers 
+# def fetch_student(id):
+#     if id < 0 or id >= len(students):
+#         return jsonify({"message": "No such student"}), 404
+#     return jsonify(students[id]), 200
 
+
+# ----------------FETCHING ALL STUDENTS ----------------
 @app.route('/students', methods=['GET'])
 def fetch_students():
-    if len(students) == 0:
-        return jsonify({"Message" : "No students found"}), 400 
-    return jsonify(students), 200     # 200 OK
+    students = Students.query.all()
+    # student_list = []
+    # for student in students:
+    #     student_list.append({'id': student.id, 'name': student.name, 'email': student.email, 'age': student.age})
+    # print(students)
+            # using LIST COMPREHENSION
+    student_list = [{'id': student.id, 'name': student.name, 'email': student.email, 'age': student.age} for student in students]
+    return jsonify(student_list) ,200
 
-@app.route('/students/<int:id>', methods=['GET']) # /students/<int:id> used to pass dynamic numbers 
-def fetch_student(id):
-    if id < 0 or id >= len(students):
-        return jsonify({"message": "No such student"}), 404
-    return jsonify(students[id]), 200
+# ----------------FETCHING A STUDENT BY ID ----------------
+@app.route('/students/<int:id>', methods=['GET'])
+def fetch_student_by_id(id):
+    student = Students.query.get_or_404(id)
+    return jsonify({'id':student.id, 'name': student.name, 'email':student.email, 'age':student.age}) , 200
+
+# ----------------ADDING A NEW STUDENT ----------------
+@app.route('/students', methods=['POST'])
+def add_student():
+    data = request.get_json()
+    new_student = Students(name=data['name'], age=data['age'], email=data['email'])
+
+    db.session.add(new_student)
+    db.session.commit()
+    return jsonify({"Success": "Student added successfully!"}), 201
+
+# ----------------UPDATING A STUDENT BY ID ----------------
+@app.route('/students/<int:id>', methods=["PUT"])
+def update_student(id):
+    student = Students.query.get_or_404(id) # getting the student to be updated
+    data = request.get_json() # getting the data being entered
+
+    student.name = data["name"]
+    student.age = data["age"]
+    student.email = data["email"]
+
+    db.session.commit()
+    return jsonify({"Success": "Student updated successfully!"}), 200
+
+# ----------------DELETING A STUDENT BY ID ----------------
+@app.route('/students/<int:id>' , methods=["DELETE"])
+def delete_student(id):
+    student = Students.query.get_or_404(id)
+    student_courses = Course.query.filter_by(student_id=id).all()
+    for course in student_courses:
+        db.session.delete(course)
+        db.session.commit()
+
+    db.session.delete(student)
+    db.session.commit()
+    return jsonify({"Success": "Student deleted successfully!"}), 200
 
 
 
