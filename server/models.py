@@ -1,9 +1,9 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy_serializer import SerializerMixin
 
-# Initialize the SQLAlchemy object
-db = SQLAlchemy()
+db = SQLAlchemy()   # Initialize the SQLAlchemy object
 
+        # a) one to many relationship between students and courses
 # Define the Students model
 class Students(db.Model, SerializerMixin):
     __tablename__ = 'students'
@@ -13,11 +13,9 @@ class Students(db.Model, SerializerMixin):
     email = db.Column(db.String(50), nullable=False)
 
     # Relationship to Course model
-    # 'lazy=True' defers the loading of related Course objects until the courses attribute is accessed
-    courses = db.relationship('Course', backref='student', lazy=True)
+    courses = db.relationship('Course', backref='student', lazy=True)     # 'lazy=True' defers the loading of related Course objects until the courses attribute is accessed
 
-    # Serialization rules to avoid recursion issues
-    # serialize_rules = ('-courses.student',)
+    # serialize_rules = ('-courses.student',)     # Serialization rules to avoid recursion issues
 
     def to_dict(self):
         return {
@@ -47,5 +45,5 @@ class Course(db.Model, SerializerMixin):
     # Foreign key to reference Students table
     student_id = db.Column(db.Integer, db.ForeignKey('students.id'), nullable=False)
 
-    # Serialization rules to avoid recursion issues
     # serialize_rules = ('-student.courses',)
+
