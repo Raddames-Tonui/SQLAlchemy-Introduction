@@ -17,7 +17,16 @@ class Students(db.Model, SerializerMixin):
     courses = db.relationship('Course', backref='student', lazy=True)
 
     # Serialization rules to avoid recursion issues
-    serialize_rules = ('-courses.student',)
+    # serialize_rules = ('-courses.student',)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'age': self.age,
+            'email': self.email,
+            'courses': [course.to_dict() for course in self.courses]
+        }
 
 class Course(db.Model, SerializerMixin):
     __tablename__ = 'course'
@@ -26,8 +35,17 @@ class Course(db.Model, SerializerMixin):
     code = db.Column(db.String(10), nullable=False)
     description = db.Column(db.String(200), nullable=False)
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'code': self.code,
+            'description': self.description,
+            'student_id': self.student_id
+        }
+
     # Foreign key to reference Students table
     student_id = db.Column(db.Integer, db.ForeignKey('students.id'), nullable=False)
 
     # Serialization rules to avoid recursion issues
-    serialize_rules = ('-student.courses',)
+    # serialize_rules = ('-student.courses',)
