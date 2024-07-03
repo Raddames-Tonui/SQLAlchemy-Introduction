@@ -63,6 +63,15 @@ def fetch_student_by_id(id):
 @app.route('/students', methods=['POST'])
 def add_student():
     data = request.get_json()
+
+    # Check if email already exists / validations
+    email_exist = Students.query.filter_by(email=data['email']).first()
+    if not data['name'] or not data['age'] or not data['email']:
+        return jsonify({"message": "All fields are required"}), 400
+    if email_exist:
+        return jsonify({"message": "Email already exists"}), 409
+    if data['age'] < 18 or data['age'] > 100:
+        return jsonify({"message": "Age must be between 18 and 100"}), 400
     new_student = Students(name=data['name'], age=data['age'], email=data['email'])
 
     db.session.add(new_student)
