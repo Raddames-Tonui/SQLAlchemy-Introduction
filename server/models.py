@@ -1,5 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy_serializer import SerializerMixin
+from sqlalchemy.orm import validates
 
 db = SQLAlchemy()   # Initialize the SQLAlchemy object
 
@@ -25,7 +26,12 @@ class Students(db.Model, SerializerMixin):
             'email': self.email,
             'courses': [course.to_dict() for course in self.courses]
         }
-
+    @validates('email')
+    def validate_email(self, key, email):
+        if "@" not in email:
+            raise ValueError("Invalid email address")
+        return email
+    
 class Course(db.Model, SerializerMixin):
     __tablename__ = 'course'
     id = db.Column(db.Integer, primary_key=True)

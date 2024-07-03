@@ -63,34 +63,49 @@ def fetch_student_by_id(id):
 @app.route('/students', methods=['POST'])
 def add_student():
     data = request.get_json()
-
-    # Check if email already exists / validations
+        # ********VALIDATIONS********
+    if ('age'not in data or not data['name']) or ('age'not in data or not data['age'])  or ('email'not in data or not data['email']):
+        return jsonify({"message": "All fields are required"}), 400 
+   
     email_exist = Students.query.filter_by(email=data['email']).first()
-    if not data['name'] or not data['age'] or not data['email']:
-        return jsonify({"message": "All fields are required"}), 400
     if email_exist:
         return jsonify({"message": "Email already exists"}), 409
     if data['age'] < 18 or data['age'] > 100:
         return jsonify({"message": "Age must be between 18 and 100"}), 400
-    new_student = Students(name=data['name'], age=data['age'], email=data['email'])
+    
+    try: # if @ is not at email
+        new_student = Students(name=data['name'], age=data['age'], email=data['email'])
 
-    db.session.add(new_student)
-    db.session.commit()
-    return jsonify({"Success": "Student added successfully!"}), 201
-
+        db.session.add(new_student)
+        db.session.commit()
+        return jsonify({"Success": "Student added successfully!"}), 201
+    except:
+        return jsonify({"message": "An error occurred while adding the student"}), 500
+    
 # ----------------UPDATING A STUDENT BY ID ----------------
 @app.route('/students/<int:id>', methods=["PUT"])
 def update_student(id):
     student = Students.query.get_or_404(id)  # getting the student to be updated
     data = request.get_json()  # getting the data being entered
+            # ********VALIDATIONS********
+    if ('age'not in data or not data['name']) or ('age'not in data or not data['age'])  or ('email'not in data or not data['email']):
+        return jsonify({"message": "All fields are required"}), 400 
+   
+    email_exist = Students.query.filter_by(email=data['email']).first()
+    if email_exist:
+        return jsonify({"message": "Email already exists"}), 409
+    if data['age'] < 18 or data['age'] > 100:
+        return jsonify({"message": "Age must be between 18 and 100"}), 400
+    try:
+        student.name = data["name"]
+        student.age = data["age"]
+        student.email = data["email"]
 
-    student.name = data["name"]
-    student.age = data["age"]
-    student.email = data["email"]
-
-    db.session.commit()
-    return jsonify({"Success": "Student updated successfully!"}), 200
-
+        db.session.commit()
+        return jsonify({"Success": "Student updated successfully!"}), 200
+    except:
+        return jsonify({"message": "An error occurred while updating the student"}), 500
+    
 # ----------------DELETING A STUDENT BY ID ----------------
 @app.route('/students/<int:id>', methods=["DELETE"])
 def delete_student(id):
